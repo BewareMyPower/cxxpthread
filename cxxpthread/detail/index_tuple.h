@@ -25,15 +25,22 @@ struct MakeIndexTupleImp<ie, IndexTuple<indexes...>, ie> {
   using type = IndexTuple<indexes..., ie>;
 };
 
-// Here is an example of MakeIndexTuple<1, 3> template type expansion:
-// MakeIndexTuple<1, 3>::type
+// MakeIndexTuple<1, 4>::type
 // = MakeIndexTupleImp<1, IndexTuple<>, 3>::type
 // = MakeIndexTupleImp<2, IndexTuple<1>, 3>::type
 // = MakeIndexTupleImp<3, IndexTuple<1,2>, 3>::type
 // = IndexTuple<1, 2, 3>
 template <std::size_t ib, std::size_t ie>
 struct MakeIndexTuple {
-  using type = typename MakeIndexTupleImp<ib, IndexTuple<>, ie>::type;
+  static_assert(ib < ie, "MakeIndexTuple<ib, ie>: ib must < ie");
+  using type = typename MakeIndexTupleImp<ib, IndexTuple<>, ie - 1>::type;
+};
+
+// MakeIndexTuple<1, 1>::type
+// = IndexTuple<>
+template <std::size_t i>
+struct MakeIndexTuple<i, i> {
+  using type = IndexTuple<>;
 };
 
 }  // namespace cxxpthread::detail

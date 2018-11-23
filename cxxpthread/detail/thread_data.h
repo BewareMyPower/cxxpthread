@@ -23,14 +23,13 @@ template <typename F, typename... Args>
 struct ThreadData : BaseThreadData {
   using TupleType = std::tuple<typename std::decay<F>::type,
                                typename std::decay<Args>::type...>;
-  // FIXME: can't work if F is a function object
-  using ReturnType = typename std::result_of<F(Args...)>::type;
+  using FuncPtr = typename std::decay<F>::type;
+  using ReturnType = typename std::result_of<FuncPtr(Args...)>::type;
 
   explicit ThreadData(F&& f, Args&&... args)
       : data_(std::forward<F>(f), std::forward<Args>(args)...) {}
 
   void run() override {
-    // FIXME: can't work if argsCount() == 0
     using IndexTupleType = typename MakeIndexTuple<1, argsCount()>::type;
     RunImp<std::is_void<ReturnType>::value, TupleType, IndexTupleType>::run(
         data_);
@@ -58,7 +57,7 @@ struct ThreadData : BaseThreadData {
   };
 
   static constexpr std::size_t argsCount() {
-    return std::tuple_size<TupleType>::value - 1;
+    return std::tuple_size<TupleType>::value;
   }
 
   TupleType data_;
