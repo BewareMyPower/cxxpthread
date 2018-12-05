@@ -15,12 +15,11 @@ namespace cxxpthread {
 
 class Thread {
  public:
-#define REMOVE_REF_TYPE(T) typename std::remove_reference<T>::type
   // Start a thread function f(args...), if failed, print error and exit.
   template <typename F, typename... Args>
   Thread(F&& f, Args&&... args) noexcept {
     using BaseType = detail::BaseThreadData;
-    using DerivedType = detail::ThreadData<REMOVE_REF_TYPE(F), Args...>;
+    using DerivedType = detail::ThreadData<F, Args...>;
 
     auto func = [](void* data) -> void* {
       std::unique_ptr<BaseType> p(static_cast<BaseType*>(data));
@@ -37,7 +36,6 @@ class Thread {
     int error = pthread_create(&handle_, nullptr, func, data);
     if (error != 0) handleError(error, "cxxpthread::Thread create failed");
   }
-#undef REMOVE_REF_TYPE
 
   template <typename T = int>
   std::unique_ptr<T> join() {
