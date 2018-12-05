@@ -61,6 +61,10 @@ class Thread {
     return std::unique_ptr<ResultType>(static_cast<ResultType*>(retval_));
   }
 
+  static void Exit(long retval) {
+    pthread_exit(reinterpret_cast<void*>(retval));
+  }
+
   // If thread function use pthread_exit() to exit thread, getExitCode() will
   // return exit code.
   // If thread function return a value, getExitCode() will return a pointer to

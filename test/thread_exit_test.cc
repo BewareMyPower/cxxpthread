@@ -17,7 +17,7 @@ int main() {
          << endl;
   }
   {
-    Thread t{[] { pthread_exit(reinterpret_cast<void*>(1L)); }};
+    Thread t{[] { Thread::Exit(1); }};
     t.join();
     cout << "Thread exit with " << t.getExitCode() << endl;
   }
