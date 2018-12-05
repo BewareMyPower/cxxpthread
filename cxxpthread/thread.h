@@ -11,6 +11,24 @@ namespace cxxpthread {
 
 class Thread {
  public:
+  Thread() = default;
+
+  Thread(const Thread&) = delete;
+  Thread& operator=(const Thread&) = delete;
+
+  Thread(Thread&& rhs) noexcept : handle_(rhs.handle_), retval_(rhs.retval_) {
+    rhs.reset();
+  }
+
+  Thread& operator=(Thread&& rhs) noexcept {
+    if (handle_ == pthread_t{})
+      handleError("Thread move assign: can't use a unjoined Thread as lvalue");
+    handle_ = rhs.handle_;
+    retval_ = rhs.retval_;
+    rhs.reset();
+    return *this;
+  }
+
   // Start a thread function f(args...), if failed, print error and exit.
   template <typename F, typename... Args>
   Thread(F&& f, Args&&... args) noexcept {
@@ -32,6 +50,7 @@ class Thread {
   void join() {
     int error = pthread_join(handle_, &retval_);
     if (error != 0) handleError(error, "cxxpthread::Thread::join()");
+    handle_ = pthread_t{};
   }
 
   // If thread function return a value, getResult() will return an unique_ptr
@@ -49,8 +68,13 @@ class Thread {
   long getExitCode() const { return reinterpret_cast<long>(retval_); }
 
  private:
-  pthread_t handle_;
+  pthread_t handle_{};
   void* retval_ = nullptr;
+
+  void reset() noexcept {
+    handle_ = pthread_t{};
+    retval_ = nullptr;
+  }
 };
 
 }  // namespace cxxpthread
