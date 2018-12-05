@@ -40,7 +40,7 @@ struct ThreadData : BaseThreadData {
 
   template <typename Tuple, std::size_t... indexes>
   struct RunImp<true, Tuple, IndexTuple<indexes...>> {
-    static void run(const Tuple& data) {
+    static void run(Tuple& data) {
       invoke(std::move(std::get<0>(data)),
              std::move(std::get<indexes>(data))...);
     }
@@ -48,7 +48,7 @@ struct ThreadData : BaseThreadData {
 
   template <typename Tuple, std::size_t... indexes>
   struct RunImp<false, Tuple, IndexTuple<indexes...>> {
-    static void run(const Tuple& data) {
+    static void run(Tuple& data) {
       auto&& ret = invoke(std::move(std::get<0>(data)),
                           std::move(std::get<indexes>(data))...);
       // FIXME: return value must have move constructor
