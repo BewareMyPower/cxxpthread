@@ -7,10 +7,6 @@
 #include "detail/thread_data.h"
 #include "error.h"
 
-#ifdef DEBUG
-#include "print_arg_type.h"
-#endif
-
 namespace cxxpthread {
 
 class Thread {
@@ -29,25 +25,32 @@ class Thread {
 
     auto data =
         new DerivedType(std::forward<F>(f), std::forward<Args>(args)...);
-#ifdef DEBUG
-    printArgsType<F>("F");
-    printArgsType<1, Args...>("Args");
-#endif
     int error = pthread_create(&handle_, nullptr, func, data);
     if (error != 0) handleError(error, "cxxpthread::Thread create failed");
   }
 
-  template <typename T = int>
-  std::unique_ptr<T> join() {
-    void* data;
-    int error = pthread_join(handle_, &data);
+  void join() {
+    int error = pthread_join(handle_, &retval_);
     if (error != 0) handleError(error, "cxxpthread::Thread::join()");
-
-    return std::unique_ptr<T>(static_cast<T*>(data));
   }
+
+  // If thread function return a value, getResult() will return an unique_ptr
+  // object to that value.
+  // NOTE: User must specify correct ResultType, or it may cause fatal error.
+  template <typename ResultType>
+  std::unique_ptr<ResultType> getResult() const {
+    return std::unique_ptr<ResultType>(static_cast<ResultType*>(retval_));
+  }
+
+  // If thread function use pthread_exit() to exit thread, getExitCode() will
+  // return exit code.
+  // If thread function return a value, getExitCode() will return a pointer to
+  // that value.
+  long getExitCode() const { return reinterpret_cast<long>(retval_); }
 
  private:
   pthread_t handle_;
+  void* retval_ = nullptr;
 };
 
 }  // namespace cxxpthread
