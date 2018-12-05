@@ -22,3 +22,7 @@ int main() {
   }
   return 0;
 }
+/*
+Object::f()
+Object::g(100)
+*/

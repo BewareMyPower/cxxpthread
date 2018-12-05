@@ -28,3 +28,9 @@ int main() {
   }
   return 0;
 }
+/*
+3 + 4 = 7
+Thread exit with 0x7fa32c0008c0
+Thread exit with 1
+Thread exit with 0
+*/
