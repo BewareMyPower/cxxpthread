@@ -21,18 +21,19 @@ struct BaseThreadData {
 
 template <typename F, typename... Args>
 struct ThreadData : BaseThreadData {
-  using TupleType = std::tuple<typename std::decay<F>::type,
-                               typename std::decay<Args>::type...>;
-  using FuncPtr = typename std::decay<F>::type;
-  using ReturnType = typename std::result_of<FuncPtr(Args...)>::type;
+  // implement C++14's decay_t
+  template <typename T>
+  using decay_t = typename std::decay<T>::type;
+
+  using TupleType = std::tuple<decay_t<F>, decay_t<Args>...>;
+  using ReturnType = typename std::result_of<decay_t<F>(Args...)>::type;
 
   explicit ThreadData(F&& f, Args&&... args)
       : data_(std::forward<F>(f), std::forward<Args>(args)...) {}
 
   void run() override {
-    using IndexTupleType = typename MakeIndexTuple<1, argsCount()>::type;
-    RunImp<std::is_void<ReturnType>::value, TupleType, IndexTupleType>::run(
-        data_);
+    RunImp<std::is_void<ReturnType>::value, TupleType,
+           IndexRangeTuple<1, argsCount()>>::run(data_);
   }
 
   template <bool retval_is_void, typename DataTuple, typename IndexTuple>

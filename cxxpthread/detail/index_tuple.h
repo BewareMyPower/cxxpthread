@@ -43,6 +43,9 @@ struct MakeIndexTuple<i, i> {
   using type = IndexTuple<>;
 };
 
+template <std::size_t ib, std::size_t ie>
+using IndexRangeTuple = typename MakeIndexTuple<ib, ie>::type;
+
 }  // namespace cxxpthread::detail
 
 }  // namespace cxxpthread
