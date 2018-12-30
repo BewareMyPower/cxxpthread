@@ -17,7 +17,7 @@ int main() {
          << endl;
   }
   {
-    Thread t{[] { Thread::Exit(1); }};
+    Thread t{[] { Thread::exit(1); }};
     t.join();
     cout << "Thread exit with " << t.getExitCode() << endl;
   }

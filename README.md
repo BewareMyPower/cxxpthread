@@ -60,9 +60,9 @@ auto p = t.getResult<int>(t);  // p is std::unique_ptr<int> object
 3. If `T` is not proper, it may cause memory leak, like `int* p = new int(1); delete (double*)p; `;
 4. `T` must be moveable.
 
-## 3.2 Call `Thread::Exit()` in thread function
+## 3.2 Call `Thread::exit()` in thread function and get thread exit code by `Thread::getExitCode`
 ```
-void f() { Thread::Exit(1); }
+void f() { Thread::exit(1); }
 
 Thread t(f);
 t.join();
