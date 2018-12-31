@@ -53,6 +53,8 @@ struct ThreadData : BaseThreadData {
       auto&& ret = invoke(std::move(std::get<0>(data)),
                           std::move(std::get<indexes>(data))...);
       // FIXME: return value must have move constructor
+      static_assert(std::is_move_constructible<ReturnType>::value,
+                    "Thread function return type must be moveable");
       pthread_exit(new ReturnType(std::move(ret)));
     }
   };

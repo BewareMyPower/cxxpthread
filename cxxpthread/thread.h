@@ -38,11 +38,15 @@ class Thread final {
   // If thread function call pthread_join() to report an integral error code,
   // getResult() will delete this error code and cause segment fault.
   // To check the error code, you should call getExitCode().
-  long getExitCode() const noexcept { return reinterpret_cast<long>(ret_); }
-
-  static void exit(long error) {  // NOTE: noexcept will cause exception here
-    pthread_exit(reinterpret_cast<void*>(error));
+  long getExitCode() const noexcept {
+    static_assert(sizeof(long) == sizeof(void*),
+                  "getExitCode(): convert void* to long");
+    return reinterpret_cast<long>(ret_);
   }
+
+  // NOTE: noexcept will cause exception here because in C++, pthread_exit()
+  // throws abi::__forced_unwind exception.
+  static void exit(long error) { pthread_exit(reinterpret_cast<void*>(error)); }
 
  private:
   pthread_t handle_;
