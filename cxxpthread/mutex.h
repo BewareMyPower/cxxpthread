@@ -1,5 +1,5 @@
-#ifndef MUTEX_H
-#define MUTEX_H
+#ifndef CXXPTHREAD_MUTEX_H
+#define CXXPTHREAD_MUTEX_H
 
 #include <pthread.h>
 #include "error.h"
@@ -61,4 +61,4 @@ inline void Mutex::unlock() noexcept {
 
 }  // namespace cxxpthread
 
-#endif  // MUTEX_H
+#endif  // CXXPTHREAD_MUTEX_H
