@@ -7,15 +7,13 @@
 #include <memory>
 #include "detail/thread_data.h"
 #include "error.h"
+#include "noncopyable.h"
 
 namespace cxxpthread {
 
-class Thread final {
+class Thread final : noncopyable {
  public:
   Thread() = default;
-
-  Thread(const Thread&) = delete;
-  Thread& operator=(const Thread&) = delete;
 
   Thread(Thread&& rhs) noexcept;
   Thread& operator=(Thread&& rhs) noexcept;
@@ -32,6 +30,10 @@ class Thread final {
 
   bool hasJoined() const noexcept { return has_joined_; }
 
+  // Detach a thread, If failed, print error and exit.
+  // A detached Thread instance can't call join().
+  void detach() noexcept;
+
   // If thread function return a value, it innerlly call pthread_exit(), which
   // parameter is a pointer to a memory allocated by new. To avoid memory leak,
   // you must call getResult() to hold the pointer and automatically release it.
@@ -46,6 +48,8 @@ class Thread final {
   // NOTE: noexcept will cause exception here because in C++, pthread_exit()
   // throws abi::__forced_unwind exception.
   static void exit(long error) { pthread_exit(reinterpret_cast<void*>(error)); }
+
+  static void cancel(Thread& t);
 
  private:
   pthread_t handle_;
@@ -97,12 +101,24 @@ Thread::~Thread() {
 
 inline void Thread::join() noexcept {
   const char* where = "cxxpthread::Thread::join()";
+  if (pthread_equal(handle_, pthread_t()))
+    handleMessage("%s: Thread hasn't initialized or has detached.", where);
   if (hasJoined()) handleMessage("%s: Already has joined.", where);
 
   int error = pthread_join(handle_, &ret_);
-  if (error != 0) handleError(error, "%s: pthread_join failed", where);
+  if (error != 0) handleError(error, "%s: pthread_join", where);
 
   has_joined_ = true;
+}
+
+inline void Thread::detach() noexcept {
+  const char* where = "cxxpthread::Thread::detach()";
+  if (hasJoined()) handleMessage("%s: Already has joined.", where);
+
+  int error = pthread_detach(handle_);
+  if (error != 0) handleError(error, "%s: pthread_detach", where);
+
+  init();
 }
 
 template <typename T>
@@ -120,6 +136,11 @@ long Thread::getExitCode() const noexcept {
   if (!hasJoined()) handleMessage("%s: Already has joined.", where);
 
   return reinterpret_cast<long>(ret_);
+}
+
+void Thread::cancel(Thread& t) {
+  int error = pthread_cancel(t.handle_);
+  if (error != 0) handleError(error, "cxxpthrad::Thread::cancel()");
 }
 
 inline void Thread::init() noexcept {
